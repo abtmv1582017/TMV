@@ -1,0 +1,6 @@
+{
+  "name": "Tamralipta Mahavidyalaya LMS (TM-LMS)",
+  "description": "Smart Learning Management System for Tamralipta Mahavidyalaya, Tamluk. Centralizes digital learning, academic resources, assessments, attendance, and institutional administration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
