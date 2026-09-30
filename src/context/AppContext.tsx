@@ -21,7 +21,11 @@ import {
   AuditLog,
   AuthPolicy,
   PasswordResetRecord,
-  DispatchedNotification
+  DispatchedNotification,
+  InstitutionalDocument,
+  ApprovalRequest,
+  ClassSwapRequest,
+  ResourceVersion
 } from '../types';
 import { StorageService } from '../services/storage';
 import { AuthService, defaultAuthPolicy } from '../services/authService';
@@ -50,8 +54,8 @@ interface AppContextType {
   updateAuthPolicy: (newPolicy: AuthPolicy) => void;
   dispatchedNotifications: DispatchedNotification[];
   dismissNotification: (id: string) => void;
-  activeAuthModal: 'login' | 'forgot_password' | 'forgot_user_id' | 'account_activation' | 'profile' | null;
-  setActiveAuthModal: (modal: 'login' | 'forgot_password' | 'forgot_user_id' | 'account_activation' | 'profile' | null) => void;
+  activeAuthModal: 'login' | 'forgot_password' | 'forgot_user_id' | 'account_activation' | 'profile' | 'user_manual' | null;
+  setActiveAuthModal: (modal: 'login' | 'forgot_password' | 'forgot_user_id' | 'account_activation' | 'profile' | 'user_manual' | null) => void;
 
   language: Language;
   setLanguage: (lang: Language) => void;
@@ -84,14 +88,29 @@ interface AppContextType {
   tickets: SupportTicket[];
   events: CalendarEvent[];
   auditLogs: AuditLog[];
+  institutionalDocs: InstitutionalDocument[];
+  approvalRequests: ApprovalRequest[];
+  classSwaps: ClassSwapRequest[];
 
   addCourse: (course: Omit<Course, 'id' | 'totalEnrolled'>) => void;
   updateCourse: (course: Course) => void;
+  assignFacultyToCourse: (courseId: string, facultyId: string, facultyName: string) => void;
   addResource: (res: Omit<LearningResource, 'id' | 'uploadedAt' | 'downloadCount'>) => void;
+  updateResource: (res: LearningResource) => void;
+  deleteResource: (id: string) => void;
+  archiveResource: (id: string) => void;
+  restoreResource: (id: string) => void;
+  submitResourceForApproval: (id: string) => void;
+  approveResource: (id: string, reviewNotes?: string) => void;
+  returnResourceForCorrection: (id: string, reviewNotes: string) => void;
+  uploadResourceNewVersion: (id: string, fileDetails: { fileName: string; fileUrl: string; fileSize: string; changeSummary?: string }) => void;
+  restoreResourceVersion: (id: string, versionNumber: number) => void;
   incrementResourceDownload: (id: string) => void;
   addAssignment: (asg: Omit<Assignment, 'id'>) => void;
   submitAssignment: (sub: Omit<AssignmentSubmission, 'id' | 'submittedAt'>) => void;
   evaluateSubmission: (subId: string, marks: number, feedback: string) => void;
+  returnSubmissionForCorrection: (subId: string, feedback: string) => void;
+  resubmitAssignment: (subId: string, fileDetails: { fileName?: string; fileUrl?: string; textContent?: string; comment?: string }) => void;
   addAssessment: (assessment: Omit<Assessment, 'id'>) => void;
   submitQuizAttempt: (attempt: Omit<AssessmentAttempt, 'id'>) => void;
   markAttendance: (rec: Omit<AttendanceRecord, 'id'>) => void;
@@ -106,6 +125,16 @@ interface AppContextType {
   addAcademicSession: (sess: Omit<AcademicSession, 'id'>) => void;
   addDepartment: (dept: Omit<Department, 'id'>) => void;
   addProgramme: (prog: Omit<Programme, 'id'>) => void;
+
+  addInstitutionalDoc: (doc: Omit<InstitutionalDocument, 'id' | 'publicationDate'>) => void;
+  updateInstitutionalDoc: (doc: InstitutionalDocument) => void;
+  deleteInstitutionalDoc: (id: string) => void;
+
+  createApprovalRequest: (req: Omit<ApprovalRequest, 'id' | 'submittedAt' | 'status'>) => void;
+  reviewApprovalRequest: (reqId: string, status: 'approved' | 'returned_for_correction' | 'rejected', reviewNotes?: string) => void;
+
+  requestClassSwap: (swap: Omit<ClassSwapRequest, 'id' | 'status' | 'submittedAt'>) => void;
+  reviewClassSwap: (swapId: string, status: 'approved' | 'rejected', reviewNotes?: string) => void;
 
   globalSearchQuery: string;
   setGlobalSearchQuery: (q: string) => void;
@@ -141,13 +170,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [tickets, setTickets] = useState<SupportTicket[]>(() => StorageService.getTickets());
   const [events, setEvents] = useState<CalendarEvent[]>(() => StorageService.getEvents());
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(() => StorageService.getAuditLogs());
+  const [institutionalDocs, setInstitutionalDocs] = useState<InstitutionalDocument[]>(() => StorageService.getInstitutionalDocs());
+  const [approvalRequests, setApprovalRequests] = useState<ApprovalRequest[]>(() => StorageService.getApprovalRequests());
+  const [classSwaps, setClassSwaps] = useState<ClassSwapRequest[]>(() => StorageService.getClassSwaps());
 
   // Authentication & Security state
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => StorageService.getIsAuthenticated());
   const [authPolicy, setAuthPolicy] = useState<AuthPolicy>(() => StorageService.getAuthPolicy());
   const [resetTokens, setResetTokens] = useState<PasswordResetRecord[]>(() => StorageService.getResetTokens());
   const [dispatchedNotifications, setDispatchedNotifications] = useState<DispatchedNotification[]>(() => StorageService.getDispatchedNotifications());
-  const [activeAuthModal, setActiveAuthModal] = useState<'login' | 'forgot_password' | 'forgot_user_id' | 'account_activation' | 'profile' | null>(null);
+  const [activeAuthModal, setActiveAuthModal] = useState<'login' | 'forgot_password' | 'forgot_user_id' | 'account_activation' | 'profile' | 'user_manual' | null>(null);
+
+  // Real-time synchronization across browser tabs for the common database
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (!e.key) return;
+      setUsers(StorageService.getUsers());
+      setCourses(StorageService.getCourses());
+      setResources(StorageService.getResources());
+      setAssignments(StorageService.getAssignments());
+      setSubmissions(StorageService.getSubmissions());
+      setAssessments(StorageService.getAssessments());
+      setAttempts(StorageService.getAttempts());
+      setGrades(StorageService.getGrades());
+      setAttendance(StorageService.getAttendance());
+      setAnnouncements(StorageService.getAnnouncements());
+      setDiscussions(StorageService.getDiscussions());
+      setTickets(StorageService.getTickets());
+      setEvents(StorageService.getEvents());
+      setAuditLogs(StorageService.getAuditLogs());
+      setInstitutionalDocs(StorageService.getInstitutionalDocs());
+      setApprovalRequests(StorageService.getApprovalRequests());
+      setClassSwaps(StorageService.getClassSwaps());
+      setDepartments(StorageService.getDepartments());
+      setSessions(StorageService.getSessions());
+      setSettings(StorageService.getSettings());
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
 
   const currentUser = users.find((u) => u.id === currentUserId) || users[0];
 
@@ -674,17 +735,219 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     StorageService.saveCourses(updated);
   };
 
+  const assignFacultyToCourse = (courseId: string, facultyId: string, facultyName: string) => {
+    const updated = courses.map((c) => (c.id === courseId ? { ...c, facultyId, facultyName } : c));
+    setCourses(updated);
+    StorageService.saveCourses(updated);
+    StorageService.logAudit(currentUser, 'ASSIGN_FACULTY', `Assigned course ${courseId} to ${facultyName}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
   const addResource = (res: Omit<LearningResource, 'id' | 'uploadedAt' | 'downloadCount'>) => {
     const newResource: LearningResource = {
       ...res,
       id: `res-${Date.now()}`,
       uploadedAt: new Date().toISOString().substring(0, 10),
-      downloadCount: 0
+      downloadCount: 0,
+      approvalStatus: res.approvalStatus || (currentUser.role === 'dept_head' || currentUser.role === 'super_admin' ? 'approved' : 'approved'),
+      version: 1,
+      isArchived: false,
+      isSoftDeleted: false
     };
     const updated = [newResource, ...resources];
     setResources(updated);
     StorageService.saveResources(updated);
     StorageService.logAudit(currentUser, 'UPLOAD_RESOURCE', `Uploaded resource "${newResource.title}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const updateResource = (updatedResource: LearningResource) => {
+    const updated = resources.map((r) => (r.id === updatedResource.id ? updatedResource : r));
+    setResources(updated);
+    StorageService.saveResources(updated);
+    StorageService.logAudit(currentUser, 'UPDATE_RESOURCE', `Updated resource "${updatedResource.title}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const deleteResource = (id: string) => {
+    const target = resources.find((r) => r.id === id);
+    const updated = resources.map((r) => (r.id === id ? { ...r, isSoftDeleted: true, approvalStatus: 'archived' as const } : r));
+    setResources(updated);
+    StorageService.saveResources(updated);
+    StorageService.logAudit(currentUser, 'ARCHIVE_RESOURCE', `Archived/soft-deleted resource "${target?.title || id}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const archiveResource = (id: string) => {
+    const updated = resources.map((r) => (r.id === id ? { ...r, isArchived: true, approvalStatus: 'archived' as const } : r));
+    setResources(updated);
+    StorageService.saveResources(updated);
+    StorageService.logAudit(currentUser, 'ARCHIVE_RESOURCE', `Archived resource ID ${id}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const restoreResource = (id: string) => {
+    const updated = resources.map((r) => (r.id === id ? { ...r, isArchived: false, isSoftDeleted: false, approvalStatus: 'approved' as const } : r));
+    setResources(updated);
+    StorageService.saveResources(updated);
+    StorageService.logAudit(currentUser, 'RESTORE_RESOURCE', `Restored resource ID ${id}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const submitResourceForApproval = (id: string) => {
+    const target = resources.find((r) => r.id === id);
+    if (!target) return;
+    const updated = resources.map((r) => (r.id === id ? { ...r, approvalStatus: 'pending_review' as const } : r));
+    setResources(updated);
+    StorageService.saveResources(updated);
+
+    const req: ApprovalRequest = {
+      id: `appr-${Date.now()}`,
+      type: 'resource_approval',
+      title: `Resource Review: ${target.title}`,
+      departmentId: target.departmentId,
+      courseId: target.courseId,
+      submittedBy: currentUser.id,
+      submittedByName: currentUser.name,
+      submittedByRole: currentUser.role,
+      submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      status: 'pending',
+      targetId: target.id,
+      details: `Faculty ${currentUser.name} uploaded course material for departmental approval: "${target.title}".`
+    };
+    const updatedReqs = [req, ...approvalRequests];
+    setApprovalRequests(updatedReqs);
+    StorageService.saveApprovalRequests(updatedReqs);
+
+    StorageService.logAudit(currentUser, 'SUBMIT_RESOURCE_APPROVAL', `Submitted resource "${target.title}" for departmental approval`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const approveResource = (id: string, reviewNotes?: string) => {
+    const target = resources.find((r) => r.id === id);
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const updated = resources.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            approvalStatus: 'approved' as const,
+            reviewedBy: currentUser.id,
+            reviewedByName: currentUser.name,
+            reviewedAt: now,
+            reviewNotes: reviewNotes || 'Approved for student access.'
+          }
+        : r
+    );
+    setResources(updated);
+    StorageService.saveResources(updated);
+
+    const updatedReqs = approvalRequests.map((req) =>
+      req.targetId === id
+        ? { ...req, status: 'approved' as const, reviewedBy: currentUser.id, reviewedByName: currentUser.name, reviewedAt: now, reviewNotes }
+        : req
+    );
+    setApprovalRequests(updatedReqs);
+    StorageService.saveApprovalRequests(updatedReqs);
+
+    StorageService.logAudit(currentUser, 'APPROVE_RESOURCE', `Approved resource "${target?.title || id}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const returnResourceForCorrection = (id: string, reviewNotes: string) => {
+    const target = resources.find((r) => r.id === id);
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const updated = resources.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            approvalStatus: 'returned_for_correction' as const,
+            reviewedBy: currentUser.id,
+            reviewedByName: currentUser.name,
+            reviewedAt: now,
+            reviewNotes
+          }
+        : r
+    );
+    setResources(updated);
+    StorageService.saveResources(updated);
+
+    const updatedReqs = approvalRequests.map((req) =>
+      req.targetId === id
+        ? { ...req, status: 'returned_for_correction' as const, reviewedBy: currentUser.id, reviewedByName: currentUser.name, reviewedAt: now, reviewNotes }
+        : req
+    );
+    setApprovalRequests(updatedReqs);
+    StorageService.saveApprovalRequests(updatedReqs);
+
+    StorageService.logAudit(currentUser, 'RETURN_RESOURCE_CORRECTION', `Returned resource "${target?.title || id}" for correction: ${reviewNotes}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const uploadResourceNewVersion = (id: string, fileDetails: { fileName: string; fileUrl: string; fileSize: string; changeSummary?: string }) => {
+    const target = resources.find((r) => r.id === id);
+    if (!target) return;
+    const now = new Date().toISOString().substring(0, 10);
+    const prevVersion: ResourceVersion = {
+      version: target.version || 1,
+      fileName: target.url.split('/').pop() || `${target.title}.pdf`,
+      fileUrl: target.url,
+      fileSize: target.fileSize,
+      uploadedAt: target.uploadedAt,
+      uploadedBy: target.uploadedByName,
+      changeSummary: fileDetails.changeSummary || 'Previous release'
+    };
+    const currentHistory = target.versionHistory || [];
+    const newVersionNum = (target.version || 1) + 1;
+    const updated = resources.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            version: newVersionNum,
+            url: fileDetails.fileUrl,
+            fileSize: fileDetails.fileSize,
+            uploadedAt: now,
+            versionHistory: [prevVersion, ...currentHistory],
+            approvalStatus: 'approved' as const
+          }
+        : r
+    );
+    setResources(updated);
+    StorageService.saveResources(updated);
+    StorageService.logAudit(currentUser, 'UPDATE_RESOURCE_VERSION', `Uploaded v${newVersionNum} for resource "${target.title}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const restoreResourceVersion = (id: string, versionNumber: number) => {
+    const target = resources.find((r) => r.id === id);
+    if (!target || !target.versionHistory) return;
+    const ver = target.versionHistory.find((v) => v.version === versionNumber);
+    if (!ver) return;
+
+    const currentAsArchived: ResourceVersion = {
+      version: target.version || 1,
+      fileName: target.url.split('/').pop() || `${target.title}.pdf`,
+      fileUrl: target.url,
+      fileSize: target.fileSize,
+      uploadedAt: target.uploadedAt,
+      uploadedBy: target.uploadedByName,
+      changeSummary: 'Replaced by rollback to version ' + versionNumber
+    };
+
+    const remainingHistory = target.versionHistory.filter((v) => v.version !== versionNumber);
+    const updated = resources.map((r) =>
+      r.id === id
+        ? {
+            ...r,
+            version: versionNumber,
+            url: ver.fileUrl,
+            fileSize: ver.fileSize,
+            versionHistory: [currentAsArchived, ...remainingHistory]
+          }
+        : r
+    );
+    setResources(updated);
+    StorageService.saveResources(updated);
+    StorageService.logAudit(currentUser, 'ROLLBACK_RESOURCE_VERSION', `Restored v${versionNumber} for resource "${target.title}"`);
     setAuditLogs(StorageService.getAuditLogs());
   };
 
@@ -715,11 +978,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let updated: AssignmentSubmission[];
 
     if (existingIndex >= 0) {
+      const existing = submissions[existingIndex];
+      const prevVersion = {
+        version: existing.version || 1,
+        fileUrl: existing.fileUrl,
+        fileName: existing.fileName,
+        textContent: existing.textContent,
+        submittedAt: existing.submittedAt,
+        comment: existing.feedback
+      };
       const updatedSub: AssignmentSubmission = {
-        ...submissions[existingIndex],
+        ...existing,
         ...sub,
         submittedAt: now,
-        status: 'submitted'
+        status: 'submitted',
+        version: (existing.version || 1) + 1,
+        versionHistory: [prevVersion, ...(existing.versionHistory || [])]
       };
       updated = [...submissions];
       updated[existingIndex] = updatedSub;
@@ -727,7 +1001,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const newSub: AssignmentSubmission = {
         ...sub,
         id: `sub-${Date.now()}`,
-        submittedAt: now
+        submittedAt: now,
+        version: 1,
+        versionHistory: []
       };
       updated = [newSub, ...submissions];
     }
@@ -756,6 +1032,195 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSubmissions(updated);
     StorageService.saveSubmissions(updated);
     StorageService.logAudit(currentUser, 'EVALUATE_SUBMISSION', `Evaluated submission ${subId}, awarded ${marks} marks`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const returnSubmissionForCorrection = (subId: string, feedback: string) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
+    const updated = submissions.map((s) => {
+      if (s.id === subId) {
+        return {
+          ...s,
+          feedback,
+          status: 'returned_for_correction' as const,
+          evaluatedBy: currentUser.name,
+          evaluatedAt: now,
+          allowResubmission: true
+        };
+      }
+      return s;
+    });
+    setSubmissions(updated);
+    StorageService.saveSubmissions(updated);
+    StorageService.logAudit(currentUser, 'RETURN_SUBMISSION', `Returned submission ${subId} for student correction: ${feedback}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const resubmitAssignment = (subId: string, fileDetails: { fileName?: string; fileUrl?: string; textContent?: string; comment?: string }) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
+    const target = submissions.find((s) => s.id === subId);
+    if (!target) return;
+
+    const prevVer = {
+      version: target.version || 1,
+      fileName: target.fileName,
+      fileUrl: target.fileUrl,
+      textContent: target.textContent,
+      submittedAt: target.submittedAt,
+      comment: target.feedback
+    };
+
+    const newVersionNum = (target.version || 1) + 1;
+    const history = target.versionHistory || [];
+
+    const updated = submissions.map((s) =>
+      s.id === subId
+        ? {
+            ...s,
+            fileName: fileDetails.fileName || s.fileName,
+            fileUrl: fileDetails.fileUrl || s.fileUrl,
+            textContent: fileDetails.textContent !== undefined ? fileDetails.textContent : s.textContent,
+            submittedAt: now,
+            status: 'submitted' as const,
+            version: newVersionNum,
+            versionHistory: [prevVer, ...history]
+          }
+        : s
+    );
+    setSubmissions(updated);
+    StorageService.saveSubmissions(updated);
+    StorageService.logAudit(currentUser, 'RESUBMIT_ASSIGNMENT', `Student uploaded revision v${newVersionNum} for submission ${subId}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const createApprovalRequest = (req: Omit<ApprovalRequest, 'id' | 'submittedAt' | 'status'>) => {
+    const newReq: ApprovalRequest = {
+      ...req,
+      id: `appr-${Date.now()}`,
+      submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      status: 'pending'
+    };
+    const updated = [newReq, ...approvalRequests];
+    setApprovalRequests(updated);
+    StorageService.saveApprovalRequests(updated);
+    StorageService.logAudit(currentUser, 'CREATE_APPROVAL_REQUEST', `Submitted approval request "${newReq.title}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const reviewApprovalRequest = (reqId: string, status: 'approved' | 'returned_for_correction' | 'rejected', reviewNotes?: string) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const target = approvalRequests.find((r) => r.id === reqId);
+    const updated = approvalRequests.map((r) =>
+      r.id === reqId
+        ? { ...r, status, reviewNotes, reviewedBy: currentUser.id, reviewedByName: currentUser.name, reviewedAt: now }
+        : r
+    );
+    setApprovalRequests(updated);
+    StorageService.saveApprovalRequests(updated);
+
+    // If target was a resource approval, sync with the resource
+    if (target && target.type === 'resource_approval') {
+      const resourceStatus = status === 'approved' ? ('approved' as const) : ('returned_for_correction' as const);
+      const updatedRes = resources.map((res) =>
+        res.id === target.targetId
+          ? {
+              ...res,
+              approvalStatus: resourceStatus,
+              reviewedBy: currentUser.id,
+              reviewedByName: currentUser.name,
+              reviewedAt: now,
+              reviewNotes: reviewNotes || (status === 'approved' ? 'Approved by HOD' : 'Correction required')
+            }
+          : res
+      );
+      setResources(updatedRes);
+      StorageService.saveResources(updatedRes);
+    }
+
+    StorageService.logAudit(currentUser, 'REVIEW_APPROVAL_REQUEST', `Marked request ${reqId} as ${status}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const requestClassSwap = (swap: Omit<ClassSwapRequest, 'id' | 'status' | 'submittedAt'>) => {
+    const newSwap: ClassSwapRequest = {
+      ...swap,
+      id: `swap-${Date.now()}`,
+      submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      status: 'pending'
+    };
+    const updated = [newSwap, ...classSwaps];
+    setClassSwaps(updated);
+    StorageService.saveClassSwaps(updated);
+
+    const apprReq: ApprovalRequest = {
+      id: `appr-swap-${Date.now()}`,
+      type: 'class_swap',
+      title: `Class Swap: ${swap.courseTitle}`,
+      departmentId: swap.departmentId,
+      courseId: swap.courseId,
+      submittedBy: currentUser.id,
+      submittedByName: currentUser.name,
+      submittedByRole: currentUser.role,
+      submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      status: 'pending',
+      targetId: newSwap.id,
+      details: `${swap.requesterFacultyName} requested lecture swap with ${swap.targetFacultyName} for ${swap.originalDate} (${swap.originalTimeSlot}). Reason: ${swap.reason}`
+    };
+    const updatedReqs = [apprReq, ...approvalRequests];
+    setApprovalRequests(updatedReqs);
+    StorageService.saveApprovalRequests(updatedReqs);
+
+    StorageService.logAudit(currentUser, 'REQUEST_CLASS_SWAP', `Requested lecture swap for course ${swap.courseTitle}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const reviewClassSwap = (swapId: string, status: 'approved' | 'rejected', reviewNotes?: string) => {
+    const updated = classSwaps.map((s) =>
+      s.id === swapId
+        ? { ...s, status, reviewNotes, reviewedBy: currentUser.name }
+        : s
+    );
+    setClassSwaps(updated);
+    StorageService.saveClassSwaps(updated);
+
+    const updatedReqs = approvalRequests.map((r) =>
+      r.targetId === swapId
+        ? { ...r, status: status === 'approved' ? ('approved' as const) : ('rejected' as const), reviewNotes, reviewedBy: currentUser.id, reviewedByName: currentUser.name }
+        : r
+    );
+    setApprovalRequests(updatedReqs);
+    StorageService.saveApprovalRequests(updatedReqs);
+
+    StorageService.logAudit(currentUser, 'REVIEW_CLASS_SWAP', `Class swap ${swapId} ${status} by ${currentUser.name}`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const addInstitutionalDoc = (doc: Omit<InstitutionalDocument, 'id' | 'publicationDate'>) => {
+    const newDoc: InstitutionalDocument = {
+      ...doc,
+      id: `doc-inst-${Date.now()}`,
+      publicationDate: new Date().toISOString().substring(0, 10)
+    };
+    const updated = [newDoc, ...institutionalDocs];
+    setInstitutionalDocs(updated);
+    StorageService.saveInstitutionalDocs(updated);
+    StorageService.logAudit(currentUser, 'PUBLISH_INST_DOC', `Published institutional document "${newDoc.title}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const updateInstitutionalDoc = (doc: InstitutionalDocument) => {
+    const updated = institutionalDocs.map((d) => (d.id === doc.id ? doc : d));
+    setInstitutionalDocs(updated);
+    StorageService.saveInstitutionalDocs(updated);
+    StorageService.logAudit(currentUser, 'UPDATE_INST_DOC', `Updated institutional document "${doc.title}"`);
+    setAuditLogs(StorageService.getAuditLogs());
+  };
+
+  const deleteInstitutionalDoc = (id: string) => {
+    const updated = institutionalDocs.filter((d) => d.id !== id);
+    setInstitutionalDocs(updated);
+    StorageService.saveInstitutionalDocs(updated);
+    StorageService.logAudit(currentUser, 'DELETE_INST_DOC', `Removed institutional document ID ${id}`);
     setAuditLogs(StorageService.getAuditLogs());
   };
 
@@ -979,13 +1444,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         tickets,
         events,
         auditLogs,
+        institutionalDocs,
+        approvalRequests,
+        classSwaps,
         addCourse,
         updateCourse,
+        assignFacultyToCourse,
         addResource,
+        updateResource,
+        deleteResource,
+        archiveResource,
+        restoreResource,
+        submitResourceForApproval,
+        approveResource,
+        returnResourceForCorrection,
+        uploadResourceNewVersion,
+        restoreResourceVersion,
         incrementResourceDownload,
         addAssignment,
         submitAssignment,
         evaluateSubmission,
+        returnSubmissionForCorrection,
+        resubmitAssignment,
         addAssessment,
         submitQuizAttempt,
         markAttendance,
@@ -1000,6 +1480,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addAcademicSession,
         addDepartment,
         addProgramme,
+        addInstitutionalDoc,
+        updateInstitutionalDoc,
+        deleteInstitutionalDoc,
+        createApprovalRequest,
+        reviewApprovalRequest,
+        requestClassSwap,
+        reviewClassSwap,
         globalSearchQuery,
         setGlobalSearchQuery,
 

@@ -78,9 +78,12 @@ export const AccountActivationModal: React.FC<AccountActivationModalProps> = ({
         {!isDone ? (
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Institutional User ID:
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Institutional User ID:
+                </label>
+                <span className="text-[10px] text-slate-400">Select or enter below</span>
+              </div>
               <input
                 type="text"
                 required
@@ -89,20 +92,51 @@ export const AccountActivationModal: React.FC<AccountActivationModalProps> = ({
                 placeholder="e.g. TM-STD-2026-00042 or registered email"
                 className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-sky-500"
               />
+              {/* Quick Persona Suggestions */}
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                <span className="text-[10px] text-slate-400">Quick-pick:</span>
+                <button
+                  type="button"
+                  onClick={() => setUserId('TM-STD-2026-00042')}
+                  className="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 hover:text-sky-800 text-[10px] font-mono text-slate-700 rounded-md transition cursor-pointer"
+                >
+                  Student (TM-STD)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserId('TM-FAC-0028')}
+                  className="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 hover:text-sky-800 text-[10px] font-mono text-slate-700 rounded-md transition cursor-pointer"
+                >
+                  Faculty (TM-FAC)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserId('TM-HOD-0014')}
+                  className="px-2 py-0.5 bg-slate-100 hover:bg-sky-100 hover:text-sky-800 text-[10px] font-mono text-slate-700 rounded-md transition cursor-pointer"
+                >
+                  HOD (TM-HOD)
+                </button>
+              </div>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-700 block mb-1">
-                Activation Key / Verification Code:
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-semibold text-slate-700 block">
+                  Activation Key / Verification Code:
+                </label>
+                <span className="text-[10px] text-emerald-600 font-medium">Pre-filled default</span>
+              </div>
               <input
                 type="text"
                 required
                 value={activationCode}
                 onChange={(e) => setActivationCode(e.target.value)}
                 placeholder="From your admission notice (e.g. TM-ACTIVATE)"
-                className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono focus:outline-none focus:border-sky-500"
+                className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl font-mono focus:outline-none focus:border-sky-500 bg-slate-50"
               />
+              <p className="text-[10px] text-slate-400 mt-1">
+                Official institutional activation key is <code>TM-ACTIVATE</code>.
+              </p>
             </div>
 
             <div>
@@ -111,7 +145,7 @@ export const AccountActivationModal: React.FC<AccountActivationModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="text-slate-500 text-[11px]"
+                  className="text-slate-500 text-[11px] cursor-pointer"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -121,16 +155,18 @@ export const AccountActivationModal: React.FC<AccountActivationModalProps> = ({
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="At least 10 characters"
+                placeholder="At least 10 characters (e.g. Tamralipta@2026)"
                 className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-sky-500"
               />
 
-              {newPassword && (
-                <div className="mt-1.5 flex items-center justify-between text-[11px]">
-                  <span className="text-slate-500">Strength:</span>
-                  <span className="font-semibold text-slate-800">{strength.label}</span>
-                </div>
-              )}
+              <div className="mt-1 flex items-center justify-between text-[11px]">
+                <span className={`text-[10px] ${newPassword.length >= 10 ? 'text-emerald-600 font-medium' : 'text-slate-400'}`}>
+                  ✓ Minimum 10 characters ({newPassword.length}/10)
+                </span>
+                {newPassword && (
+                  <span className="font-semibold text-slate-800 text-[10px]">{strength.label}</span>
+                )}
+              </div>
             </div>
 
             <div>
@@ -145,6 +181,9 @@ export const AccountActivationModal: React.FC<AccountActivationModalProps> = ({
                 placeholder="Re-enter password"
                 className="w-full text-xs px-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-sky-500"
               />
+              {confirmPassword && confirmPassword !== newPassword && (
+                <p className="text-[10px] text-rose-500 mt-1">Passwords do not match</p>
+              )}
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

@@ -142,6 +142,16 @@ export interface Course {
   coverGradient?: string;
 }
 
+export interface ResourceVersion {
+  version: number;
+  fileName: string;
+  fileUrl: string;
+  fileSize: string;
+  uploadedAt: string;
+  uploadedBy: string;
+  changeSummary?: string;
+}
+
 export interface LearningResource {
   id: string;
   title: string;
@@ -150,7 +160,7 @@ export interface LearningResource {
   courseCode?: string;
   departmentId?: string;
   unitId?: string;
-  category: 'department' | 'course' | 'general' | 'notice' | 'reference';
+  category: 'department' | 'course' | 'general' | 'notice' | 'reference' | 'syllabus' | 'lab_manual';
   fileType: 'pdf' | 'doc' | 'ppt' | 'xls' | 'video' | 'link' | 'image';
   fileSize: string;
   url: string;
@@ -161,6 +171,18 @@ export interface LearningResource {
   downloadCount: number;
   description: string;
   isPublic?: boolean;
+  // Approval Hierarchy & Lifecycle (Section 3.C, 4.C, 9)
+  approvalStatus?: 'draft' | 'pending_review' | 'approved' | 'returned_for_correction' | 'published' | 'archived';
+  version?: number;
+  versionHistory?: ResourceVersion[];
+  reviewNotes?: string;
+  reviewedBy?: string;
+  reviewedByName?: string;
+  reviewedAt?: string;
+  isArchived?: boolean;
+  isSoftDeleted?: boolean;
+  requiresApproval?: boolean;
+  targetAudience?: 'students' | 'faculty' | 'department_only' | 'all';
 }
 
 export interface Assignment {
@@ -180,6 +202,15 @@ export interface Assignment {
   createdByName: string;
 }
 
+export interface SubmissionVersion {
+  version: number;
+  fileUrl?: string;
+  fileName?: string;
+  textContent?: string;
+  submittedAt: string;
+  comment?: string;
+}
+
 export interface AssignmentSubmission {
   id: string;
   assignmentId: string;
@@ -191,11 +222,83 @@ export interface AssignmentSubmission {
   fileUrl?: string;
   fileName?: string;
   textContent?: string;
-  status: 'submitted' | 'late' | 'under_evaluation' | 'evaluated' | 'returned';
+  status: 'submitted' | 'late' | 'under_evaluation' | 'evaluated' | 'returned' | 'returned_for_correction';
   marksObtained?: number;
   feedback?: string;
   evaluatedBy?: string;
   evaluatedAt?: string;
+  version?: number;
+  versionHistory?: SubmissionVersion[];
+  allowResubmission?: boolean;
+}
+
+export interface ApprovalRequest {
+  id: string;
+  type: 'resource_approval' | 'class_swap' | 'course_draft' | 'marks_moderation' | 'notice_approval';
+  title: string;
+  departmentId?: string;
+  courseId?: string;
+  submittedBy: string;
+  submittedByName: string;
+  submittedByRole: UserRole;
+  submittedAt: string;
+  status: 'pending' | 'approved' | 'returned_for_correction' | 'rejected';
+  targetId: string;
+  details: string;
+  reviewNotes?: string;
+  reviewedBy?: string;
+  reviewedByName?: string;
+  reviewedAt?: string;
+}
+
+export interface ClassSwapRequest {
+  id: string;
+  departmentId: string;
+  requesterFacultyId: string;
+  requesterFacultyName: string;
+  targetFacultyId: string;
+  targetFacultyName: string;
+  courseId: string;
+  courseTitle: string;
+  originalDate: string;
+  originalTimeSlot: string;
+  swapDate: string;
+  swapTimeSlot: string;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected';
+  submittedAt: string;
+  reviewedBy?: string;
+  reviewNotes?: string;
+}
+
+export interface InstitutionalDocument {
+  id: string;
+  title: string;
+  titleBengali?: string;
+  category:
+    | 'calendar'
+    | 'circular'
+    | 'exam_notice'
+    | 'general_notice'
+    | 'approved_syllabus'
+    | 'admin_guidelines'
+    | 'policy'
+    | 'student_instruction'
+    | 'faculty_instruction';
+  academicSession: string;
+  publicationDate: string;
+  authorId: string;
+  authorName: string;
+  approvalStatus: 'draft' | 'under_review' | 'approved' | 'published' | 'archived';
+  version: number;
+  targetAudience: 'all' | 'students' | 'faculty' | 'department_heads';
+  attachmentName: string;
+  attachmentUrl: string;
+  fileSize: string;
+  fileType: 'pdf' | 'doc' | 'xls';
+  description: string;
+  approvedBy?: string;
+  expiryDate?: string;
 }
 
 export type QuestionType =
@@ -351,11 +454,17 @@ export interface SupportTicket {
 export interface AuditLog {
   id: string;
   timestamp: string;
+  userId?: string;
   userName: string;
   userRole: string;
   action: string;
+  module?: string;
+  recordId?: string;
+  previousValue?: string;
+  newValue?: string;
   details: string;
   ipAddress: string;
+  approvedBy?: string;
 }
 
 export interface InstitutionalSettings {

@@ -9,8 +9,11 @@ import {
   AlertCircle,
   MessageSquare,
   Send,
-  BookOpen
+  BookOpen,
+  FileText,
+  Download
 } from 'lucide-react';
+import { downloadStakeholderManualPDF } from '../../services/manualPdfGenerator';
 
 export const HelpDeskView: React.FC = () => {
   const {
@@ -19,7 +22,8 @@ export const HelpDeskView: React.FC = () => {
     createSupportTicket,
     replySupportTicket,
     updateTicketStatus,
-    language
+    language,
+    setActiveAuthModal
   } = useApp();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -96,11 +100,50 @@ export const HelpDeskView: React.FC = () => {
 
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold shadow-xs transition self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold shadow-xs transition self-start sm:self-auto cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Submit Support Ticket</span>
         </button>
+      </div>
+
+      {/* Official Stakeholder User Manual Card */}
+      <div className="bg-gradient-to-r from-[#0f2942] to-[#183957] rounded-2xl text-white p-5 sm:p-6 shadow-md border border-[#274f75] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-300 shadow-inner flex-shrink-0">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-white tracking-tight">
+                Official Stakeholder User Manual (PDF)
+              </h2>
+              <span className="text-[10px] bg-sky-950/80 text-sky-300 px-2 py-0.5 rounded font-bold border border-sky-400/30">
+                v2.4
+              </span>
+            </div>
+            <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+              Comprehensive 10-page operational guide covering institutional User ID generation, first-time account activation, OTP password recovery, DPDP Act 2023 compliance, and dedicated sections for all 6 stakeholder categories.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-shrink-0 w-full sm:w-auto">
+          <button
+            onClick={() => setActiveAuthModal('user_manual')}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-lg text-xs font-semibold transition cursor-pointer"
+          >
+            <BookOpen className="w-4 h-4 text-sky-300" />
+            <span>Read Online</span>
+          </button>
+          <button
+            onClick={() => downloadStakeholderManualPDF(currentUser)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition cursor-pointer"
+          >
+            <Download className="w-4 h-4" />
+            <span>Download PDF (10 Pages)</span>
+          </button>
+        </div>
       </div>
 
       {/* FAQs Section */}

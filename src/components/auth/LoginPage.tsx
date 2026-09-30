@@ -17,12 +17,14 @@ import {
   ArrowRight,
   Globe,
   KeyRound,
-  ShieldAlert
+  ShieldAlert,
+  FileText
 } from 'lucide-react';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { ForgotUserIdModal } from './ForgotUserIdModal';
 import { AccountActivationModal } from './AccountActivationModal';
 import { NotificationSimDrawer } from './NotificationSimDrawer';
+import { UserManualModal } from '../support/UserManualModal';
 
 export const LoginPage: React.FC = () => {
   const {
@@ -171,28 +173,41 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Language Toggle */}
-          <div className="flex items-center bg-[#183957] rounded-lg p-0.5 border border-[#274f75]">
+          {/* User Manual & Language Toggle */}
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setLanguage('en')}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
-                language === 'en'
-                  ? 'bg-sky-500 text-white font-semibold shadow-xs'
-                  : 'text-slate-300 hover:text-white'
-              }`}
+              type="button"
+              onClick={() => setActiveAuthModal('user_manual')}
+              className="flex items-center gap-1.5 px-3 py-1 bg-sky-900/70 hover:bg-sky-800 text-sky-200 border border-sky-400/30 rounded-lg text-xs font-medium transition cursor-pointer shadow-xs"
+              title="Download or Read the Comprehensive 10-Page Stakeholder User Manual"
             >
-              EN
+              <FileText className="w-3.5 h-3.5 text-sky-300" />
+              <span>{language === 'bn' ? 'ব্যবহার নির্দেশিকা (PDF)' : 'User Manual (PDF)'}</span>
             </button>
-            <button
-              onClick={() => setLanguage('bn')}
-              className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
-                language === 'bn'
-                  ? 'bg-sky-500 text-white font-semibold shadow-xs'
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              বাংলা
-            </button>
+
+            {/* Language Toggle */}
+            <div className="flex items-center bg-[#183957] rounded-lg p-0.5 border border-[#274f75]">
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
+                  language === 'en'
+                    ? 'bg-sky-500 text-white font-semibold shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLanguage('bn')}
+                className={`px-2.5 py-1 text-xs font-medium rounded transition-all ${
+                  language === 'bn'
+                    ? 'bg-sky-500 text-white font-semibold shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                বাংলা
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -253,6 +268,25 @@ export const LoginPage: React.FC = () => {
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Stakeholder Manual Direct Link */}
+              <div className="mt-4 pt-3 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setActiveAuthModal('user_manual')}
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-sky-200 transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-sky-400" />
+                    <span className="font-medium">
+                      {language === 'bn' ? 'সকল অংশীদারের নির্দেশিকা (PDF)' : 'Stakeholder User Manual (PDF)'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] bg-sky-500/30 text-sky-200 px-1.5 py-0.5 rounded font-bold">
+                    v2.4
+                  </span>
+                </button>
               </div>
             </div>
 
@@ -398,8 +432,17 @@ export const LoginPage: React.FC = () => {
             <div className="mt-8 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2">
               <button
                 type="button"
-                onClick={() => alert('IT Support Cell, Tamralipta Mahavidyalaya\nEmail: support@tamralipta.ac.in\nPhone: +91 (03228) 266054')}
-                className="hover:text-slate-700"
+                onClick={() => setActiveAuthModal('user_manual')}
+                className="hover:text-sky-700 text-sky-700 font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>User Manual (PDF)</span>
+              </button>
+              <span aria-hidden="true">·</span>
+              <button
+                type="button"
+                onClick={() => alert('IT Support Cell, Tamralipta Mahavidyalaya\nEmail: itsupport@tmv.ac.in\nPhone: +91 (03228) 266054')}
+                className="hover:text-slate-700 cursor-pointer"
               >
                 Contact Support
               </button>
@@ -407,7 +450,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => alert('Tamralipta Mahavidyalaya LMS complies with the Digital Personal Data Protection (DPDP) Act, 2023. Password hashes are salted and user identity data is strictly safeguarded.')}
-                className="hover:text-slate-700"
+                className="hover:text-slate-700 cursor-pointer"
               >
                 Privacy Policy (DPDP)
               </button>
@@ -415,7 +458,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => alert('Academic Code of Conduct: Access is restricted to registered students and faculty of Tamralipta Mahavidyalaya.')}
-                className="hover:text-slate-700"
+                className="hover:text-slate-700 cursor-pointer"
               >
                 Terms of Use
               </button>
@@ -428,6 +471,13 @@ export const LoginPage: React.FC = () => {
       <NotificationSimDrawer />
 
       {/* Modals */}
+      {activeAuthModal === 'user_manual' && (
+        <UserManualModal
+          onClose={() => setActiveAuthModal(null)}
+          initialRoleFilter={selectedRole}
+        />
+      )}
+
       {activeAuthModal === 'forgot_password' && (
         <ForgotPasswordModal
           onClose={() => setActiveAuthModal(null)}

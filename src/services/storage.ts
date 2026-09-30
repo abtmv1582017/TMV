@@ -19,7 +19,10 @@ import {
   AuditLog,
   AuthPolicy,
   PasswordResetRecord,
-  DispatchedNotification
+  DispatchedNotification,
+  InstitutionalDocument,
+  ApprovalRequest,
+  ClassSwapRequest
 } from '../types';
 import { defaultAuthPolicy } from './authService';
 
@@ -41,7 +44,10 @@ import {
   initialDiscussions,
   initialSupportTickets,
   initialCalendarEvents,
-  initialAuditLogs
+  initialAuditLogs,
+  initialInstitutionalDocs,
+  initialApprovalRequests,
+  initialClassSwaps
 } from '../data/initialData';
 
 const STORAGE_KEYS = {
@@ -68,7 +74,10 @@ const STORAGE_KEYS = {
   AUTH_POLICY: 'tm_lms_auth_policy_v1',
   RESET_TOKENS: 'tm_lms_reset_tokens_v1',
   DISPATCHED_NOTIFS: 'tm_lms_dispatched_notifs_v1',
-  IS_AUTHENTICATED: 'tm_lms_is_authenticated_v1'
+  IS_AUTHENTICATED: 'tm_lms_is_authenticated_v1',
+  INSTITUTIONAL_DOCS: 'tm_lms_institutional_docs_v1',
+  APPROVAL_REQUESTS: 'tm_lms_approval_requests_v1',
+  CLASS_SWAPS: 'tm_lms_class_swaps_v1'
 };
 
 function loadItem<T>(key: string, defaultValue: T): T {
@@ -145,6 +154,15 @@ export const StorageService = {
   getAuditLogs: (): AuditLog[] => loadItem(STORAGE_KEYS.AUDIT, initialAuditLogs),
   saveAuditLogs: (logs: AuditLog[]) => saveItem(STORAGE_KEYS.AUDIT, logs),
 
+  getInstitutionalDocs: (): InstitutionalDocument[] => loadItem(STORAGE_KEYS.INSTITUTIONAL_DOCS, initialInstitutionalDocs),
+  saveInstitutionalDocs: (docs: InstitutionalDocument[]) => saveItem(STORAGE_KEYS.INSTITUTIONAL_DOCS, docs),
+
+  getApprovalRequests: (): ApprovalRequest[] => loadItem(STORAGE_KEYS.APPROVAL_REQUESTS, initialApprovalRequests),
+  saveApprovalRequests: (reqs: ApprovalRequest[]) => saveItem(STORAGE_KEYS.APPROVAL_REQUESTS, reqs),
+
+  getClassSwaps: (): ClassSwapRequest[] => loadItem(STORAGE_KEYS.CLASS_SWAPS, initialClassSwaps),
+  saveClassSwaps: (swaps: ClassSwapRequest[]) => saveItem(STORAGE_KEYS.CLASS_SWAPS, swaps),
+
   getActiveUserId: (): string => loadItem(STORAGE_KEYS.CURRENT_USER_ID, 'user-student-souvik'),
   saveActiveUserId: (id: string) => saveItem(STORAGE_KEYS.CURRENT_USER_ID, id),
 
@@ -163,18 +181,29 @@ export const StorageService = {
   getIsAuthenticated: (): boolean => loadItem(STORAGE_KEYS.IS_AUTHENTICATED, false),
   saveIsAuthenticated: (isAuth: boolean) => saveItem(STORAGE_KEYS.IS_AUTHENTICATED, isAuth),
 
-  logAudit: (user: User, action: string, details: string) => {
+  logAudit: (
+    user: User,
+    action: string,
+    details: string,
+    extra?: { module?: string; recordId?: string; previousValue?: string; newValue?: string; approvedBy?: string }
+  ) => {
     const logs = loadItem(STORAGE_KEYS.AUDIT, initialAuditLogs);
     const newLog: AuditLog = {
       id: `log-${Date.now()}`,
       timestamp: new Date().toISOString().replace('T', ' ').substring(0, 19),
+      userId: user.id,
       userName: user.name,
       userRole: user.role,
       action,
+      module: extra?.module,
+      recordId: extra?.recordId,
+      previousValue: extra?.previousValue,
+      newValue: extra?.newValue,
+      approvedBy: extra?.approvedBy,
       details,
       ipAddress: '192.168.1.' + Math.floor(Math.random() * 200 + 10)
     };
-    saveItem(STORAGE_KEYS.AUDIT, [newLog, ...logs.slice(0, 99)]);
+    saveItem(STORAGE_KEYS.AUDIT, [newLog, ...logs.slice(0, 149)]);
   },
 
   resetAllData: () => {
@@ -206,7 +235,10 @@ export const StorageService = {
         discussions: StorageService.getDiscussions(),
         tickets: StorageService.getTickets(),
         events: StorageService.getEvents(),
-        auditLogs: StorageService.getAuditLogs()
+        auditLogs: StorageService.getAuditLogs(),
+        institutionalDocs: StorageService.getInstitutionalDocs(),
+        approvalRequests: StorageService.getApprovalRequests(),
+        classSwaps: StorageService.getClassSwaps()
       }
     };
     return JSON.stringify(dump, null, 2);
@@ -235,6 +267,9 @@ export const StorageService = {
       if (d.tickets) StorageService.saveTickets(d.tickets);
       if (d.events) StorageService.saveEvents(d.events);
       if (d.auditLogs) StorageService.saveAuditLogs(d.auditLogs);
+      if (d.institutionalDocs) StorageService.saveInstitutionalDocs(d.institutionalDocs);
+      if (d.approvalRequests) StorageService.saveApprovalRequests(d.approvalRequests);
+      if (d.classSwaps) StorageService.saveClassSwaps(d.classSwaps);
       return true;
     } catch (err) {
       console.error('Failed to import database backup:', err);

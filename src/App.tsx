@@ -8,13 +8,20 @@ import { LoginPage } from './components/auth/LoginPage';
 import { AdminAuthManagementView } from './components/auth/AdminAuthManagementView';
 import { UserProfileModal } from './components/auth/UserProfileModal';
 import { NotificationSimDrawer } from './components/auth/NotificationSimDrawer';
+import { UserManualModal } from './components/support/UserManualModal';
 
 // Dashboards
 import { StudentDashboard } from './components/dashboards/StudentDashboard';
 import { FacultyDashboard } from './components/dashboards/FacultyDashboard';
 import { AdminDashboard } from './components/dashboards/AdminDashboard';
 import { DeptHeadDashboard } from './components/dashboards/DeptHeadDashboard';
+import { SuperAdminDashboard } from './components/dashboards/SuperAdminDashboard';
 import { SupportDashboard } from './components/dashboards/SupportDashboard';
+
+// Governance, Documents & Approvals
+import { ApprovalsView } from './components/approvals/ApprovalsView';
+import { InstitutionalDocumentsView } from './components/documents/InstitutionalDocumentsView';
+import { CentralDatabaseView } from './components/database/CentralDatabaseView';
 
 // Modules
 import { CourseList } from './components/courses/CourseList';
@@ -67,11 +74,19 @@ const AppContent: React.FC = () => {
         if (currentUser.role === 'student') return <StudentDashboard />;
         if (currentUser.role === 'faculty') return <FacultyDashboard />;
         if (currentUser.role === 'dept_head') return <DeptHeadDashboard />;
-        if (currentUser.role === 'principal' || currentUser.role === 'super_admin') {
-          return <AdminDashboard />;
-        }
+        if (currentUser.role === 'principal') return <AdminDashboard />;
+        if (currentUser.role === 'super_admin') return <SuperAdminDashboard />;
         if (currentUser.role === 'tech_support') return <SupportDashboard />;
         return <StudentDashboard />;
+
+      case 'approvals':
+        return <ApprovalsView />;
+
+      case 'documents':
+        return <InstitutionalDocumentsView />;
+
+      case 'database':
+        return <CentralDatabaseView />;
 
       case 'auth_security':
         return <AdminAuthManagementView />;
@@ -173,6 +188,14 @@ const AppContent: React.FC = () => {
       {/* User Profile & Password Change Modal */}
       {activeAuthModal === 'profile' && (
         <UserProfileModal onClose={() => setActiveAuthModal(null)} />
+      )}
+
+      {/* Stakeholder User Manual Modal */}
+      {activeAuthModal === 'user_manual' && (
+        <UserManualModal
+          onClose={() => setActiveAuthModal(null)}
+          initialRoleFilter={currentUser.role}
+        />
       )}
 
       {/* Floating Simulation Drawer for alert dispatches */}

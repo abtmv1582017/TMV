@@ -16,7 +16,10 @@ import {
   SupportTicket,
   InstitutionalSettings,
   CalendarEvent,
-  AuditLog
+  AuditLog,
+  InstitutionalDocument,
+  ApprovalRequest,
+  ClassSwapRequest
 } from '../types';
 
 export const initialSettings: InstitutionalSettings = {
@@ -1104,5 +1107,152 @@ export const initialAuditLogs: AuditLog[] = [
     action: 'SUBMIT_QUIZ_ATTEMPT',
     details: 'Completed Mid-Semester Assessment quiz-cs-301-mid with auto-score 20/20',
     ipAddress: '192.168.1.104'
+  }
+];
+
+export const initialInstitutionalDocs: InstitutionalDocument[] = [
+  {
+    id: 'doc-inst-01',
+    title: 'Academic Calendar & Examination Schedule (Session 2025-2026)',
+    titleBengali: 'প্রাতিষ্ঠানিক শিক্ষাবর্ষ দিনপঞ্জি ও পরীক্ষা সূচি ২০২৫-২০২৬',
+    category: 'calendar',
+    academicSession: '2025-2026',
+    publicationDate: '2026-07-01',
+    authorId: 'user-principal',
+    authorName: 'Prof. (Dr.) Pranab Kumar Mishra',
+    approvalStatus: 'approved',
+    version: 1,
+    targetAudience: 'all',
+    attachmentName: 'Academic_Calendar_2025_2026_Approved.pdf',
+    attachmentUrl: '/documents/Academic_Calendar_2025_2026_Approved.pdf',
+    fileSize: '1.8 MB',
+    fileType: 'pdf',
+    description: 'Gazetted schedule of term start, Puja holidays, continuous assessments, and semester final exams.',
+    approvedBy: 'Governing Body & Principal'
+  },
+  {
+    id: 'doc-inst-02',
+    title: 'University Regulations for CBCS & Continuous Internal Assessment',
+    titleBengali: 'সিবিসিএস ও ধারাবাহিক অভ্যন্তরীণ মূল্যায়ন বিধিমালা',
+    category: 'policy',
+    academicSession: '2025-2026',
+    publicationDate: '2026-07-15',
+    authorId: 'user-principal',
+    authorName: 'Prof. (Dr.) Pranab Kumar Mishra',
+    approvalStatus: 'approved',
+    version: 2,
+    targetAudience: 'faculty',
+    attachmentName: 'CBCS_Evaluation_Policy_VU.pdf',
+    attachmentUrl: '/documents/CBCS_Evaluation_Policy_VU.pdf',
+    fileSize: '2.4 MB',
+    fileType: 'pdf',
+    description: 'Mandatory guidelines for 75% attendance criteria, internal test schedules, and mark moderation.',
+    approvedBy: 'Academic Council'
+  },
+  {
+    id: 'doc-inst-03',
+    title: 'Institutional Anti-Ragging Policy & Student Code of Conduct',
+    titleBengali: 'অ্যান্টি-র‌্যাগিং নীতিমালা ও ছাত্র আচরণবিধি',
+    category: 'student_instruction',
+    academicSession: '2025-2026',
+    publicationDate: '2026-08-01',
+    authorId: 'user-principal',
+    authorName: 'Prof. (Dr.) Pranab Kumar Mishra',
+    approvalStatus: 'approved',
+    version: 1,
+    targetAudience: 'students',
+    attachmentName: 'Student_Code_of_Conduct_Anti_Ragging.pdf',
+    attachmentUrl: '/documents/Student_Code_of_Conduct_Anti_Ragging.pdf',
+    fileSize: '950 KB',
+    fileType: 'pdf',
+    description: 'Supreme Court & UGC compliance document for safe campus environment with emergency helpline numbers.',
+    approvedBy: 'Anti-Ragging Committee'
+  },
+  {
+    id: 'doc-inst-04',
+    title: 'NAAC Accreditation Criterion 1 & 2 Self-Study Dossier',
+    titleBengali: 'ন্যাক সেলফ স্টাডি রিপোর্ট ক্রাইটেরিয়ন ১ ও ২',
+    category: 'admin_guidelines',
+    academicSession: '2025-2026',
+    publicationDate: '2026-08-20',
+    authorId: 'user-principal',
+    authorName: 'Prof. (Dr.) Pranab Kumar Mishra',
+    approvalStatus: 'approved',
+    version: 1,
+    targetAudience: 'department_heads',
+    attachmentName: 'NAAC_Criterion_1_2_SSR_Brief.pdf',
+    attachmentUrl: '/documents/NAAC_Criterion_1_2_SSR_Brief.pdf',
+    fileSize: '4.2 MB',
+    fileType: 'pdf',
+    description: 'Institutional metrics on curricular aspects, teaching-learning resources, and faculty mentorship logs.',
+    approvedBy: 'IQAC Coordinator'
+  }
+];
+
+export const initialApprovalRequests: ApprovalRequest[] = [
+  {
+    id: 'appr-01',
+    type: 'resource_approval',
+    title: 'CS-301 Advanced Graph Algorithms & Dijkstra Lab Sheets',
+    departmentId: 'dept-cs',
+    courseId: 'course-cs-301',
+    submittedBy: 'user-faculty-cs',
+    submittedByName: 'Prof. Tanmoy Banerjee',
+    submittedByRole: 'faculty',
+    submittedAt: '2026-09-28 11:20:00',
+    status: 'pending',
+    targetId: 'res-pending-01',
+    details: 'Uploaded modular lab guide containing directed graphs, adjacency list implementations, and shortest path proofs.'
+  },
+  {
+    id: 'appr-02',
+    type: 'class_swap',
+    title: 'Class Swap: Theory Lecture on 2026-10-06 with Dr. Anupam Mukherjee',
+    departmentId: 'dept-cs',
+    courseId: 'course-cs-301',
+    submittedBy: 'user-faculty-cs',
+    submittedByName: 'Prof. Tanmoy Banerjee',
+    submittedByRole: 'faculty',
+    submittedAt: '2026-09-29 14:00:00',
+    status: 'pending',
+    targetId: 'swap-01',
+    details: 'Prof. Banerjee attending National Computing Conference; requesting Dr. Mukherjee to cover Monday 11:30 AM slot.'
+  },
+  {
+    id: 'appr-03',
+    type: 'course_draft',
+    title: 'Syllabus Proposal: CMSA-SEC-301 Web Design & Full Stack Engineering',
+    departmentId: 'dept-cs',
+    submittedBy: 'user-faculty-cs',
+    submittedByName: 'Prof. Tanmoy Banerjee',
+    submittedByRole: 'faculty',
+    submittedAt: '2026-09-25 16:45:00',
+    status: 'approved',
+    targetId: 'course-cs-sec-301',
+    details: 'Skill Enhancement Course proposal under Vidyasagar University curriculum guidelines with 2 credits.',
+    reviewNotes: 'Reviewed and aligned with university contact hours. Approved for semester 3 rollout.',
+    reviewedBy: 'user-hod-cs',
+    reviewedByName: 'Dr. Anupam Mukherjee',
+    reviewedAt: '2026-09-26 10:30:00'
+  }
+];
+
+export const initialClassSwaps: ClassSwapRequest[] = [
+  {
+    id: 'swap-01',
+    departmentId: 'dept-cs',
+    requesterFacultyId: 'user-faculty-cs',
+    requesterFacultyName: 'Prof. Tanmoy Banerjee',
+    targetFacultyId: 'user-hod-cs',
+    targetFacultyName: 'Dr. Anupam Mukherjee',
+    courseId: 'course-cs-301',
+    courseTitle: 'Data Structures and Algorithms',
+    originalDate: '2026-10-06',
+    originalTimeSlot: '11:30 AM - 12:30 PM (Room 204)',
+    swapDate: '2026-10-08',
+    swapTimeSlot: '02:00 PM - 03:00 PM (Lab 2)',
+    reason: 'Attending UGC Sponsored National Seminar on Artificial Intelligence at Kolkata.',
+    status: 'pending',
+    submittedAt: '2026-09-29 14:00:00'
   }
 ];

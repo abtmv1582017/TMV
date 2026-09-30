@@ -20,7 +20,9 @@ import {
   KeyRound,
   LogOut,
   Library,
-  GraduationCap
+  GraduationCap,
+  Database,
+  CheckSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -38,6 +40,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     submissions,
     announcements,
     tickets,
+    approvalRequests,
     setSelectedCourseId,
     setSelectedAssignmentId,
     setActiveQuizId,
@@ -67,6 +70,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     currentUser.role === 'faculty' || currentUser.role === 'dept_head'
       ? submissions.filter((s) => s.status === 'submitted').length
       : 0;
+
+  const pendingApprovalsCount = approvalRequests.filter((r) => {
+    if (r.status !== 'pending') return false;
+    if (currentUser.role === 'dept_head') {
+      return !r.departmentId || r.departmentId === currentUser.departmentId;
+    }
+    return true;
+  }).length;
 
   const openTicketsCount =
     currentUser.role === 'tech_support' || currentUser.role === 'super_admin'
@@ -103,7 +114,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     },
     {
       id: 'resources',
-      label: t('nav_resources'),
+      label: currentUser.role === 'faculty' ? 'Teaching Materials' : t('nav_resources'),
+      icon: FileText
+    },
+    {
+      id: 'approvals',
+      label: currentUser.role === 'faculty' ? 'My Approvals' : 'Approval Queue',
+      icon: CheckSquare,
+      badge: currentUser.role === 'faculty' ? undefined : (pendingApprovalsCount > 0 ? pendingApprovalsCount : undefined),
+      roles: ['super_admin', 'principal', 'dept_head', 'faculty']
+    },
+    {
+      id: 'documents',
+      label: 'Official Documents',
       icon: FileText
     },
     {
@@ -178,6 +201,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       label: t('nav_support'),
       icon: HelpCircle,
       badge: openTicketsCount
+    },
+    {
+      id: 'database',
+      label: 'Common Database',
+      icon: Database,
+      roles: ['super_admin', 'principal']
     },
     {
       id: 'settings',
@@ -294,6 +323,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               </button>
             );
           })}
+        </div>
+
+        {/* Stakeholder User Manual & PDF Guide */}
+        <div className="p-3 border-t border-slate-100">
+          <button
+            onClick={() => {
+              setActiveAuthModal('user_manual');
+              onClose();
+            }}
+            className="w-full flex items-center justify-between px-3 py-2 bg-gradient-to-r from-sky-50 to-blue-50 hover:from-sky-100 hover:to-blue-100 border border-sky-200 rounded-lg text-xs font-semibold text-sky-900 transition cursor-pointer shadow-xs"
+            title="Download or Read the 10-Page Official Institutional User Manual"
+          >
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-sky-700 flex-shrink-0" />
+              <span>User Manual (PDF)</span>
+            </div>
+            <span className="text-[10px] bg-sky-700 text-white px-1.5 py-0.5 rounded font-bold">
+              v2.4
+            </span>
+          </button>
         </div>
 
         {/* Footer info */}

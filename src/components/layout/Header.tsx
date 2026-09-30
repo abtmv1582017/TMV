@@ -14,7 +14,8 @@ import {
   LogOut,
   KeyRound,
   ShieldCheck,
-  User as UserIcon
+  User as UserIcon,
+  FileText
 } from 'lucide-react';
 
 export const Header: React.FC<{ onMenuToggle?: () => void; isMobileOpen?: boolean }> = ({
@@ -144,6 +145,16 @@ export const Header: React.FC<{ onMenuToggle?: () => void; isMobileOpen?: boolea
                 বাংলা
               </button>
             </div>
+
+            {/* Stakeholder User Manual Modal / PDF Trigger */}
+            <button
+              onClick={() => setActiveAuthModal('user_manual')}
+              className="flex items-center gap-1.5 bg-[#183957] hover:bg-[#20496f] text-xs px-2.5 py-1.5 rounded-lg border border-[#274f75] text-slate-200 transition cursor-pointer shadow-xs"
+              title="Open Stakeholder User Manual & Download PDF"
+            >
+              <FileText className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden md:inline font-medium">User Manual (PDF)</span>
+            </button>
 
             {/* Role Switcher (For demonstration & testing across all 6 roles) */}
             <div className="relative">

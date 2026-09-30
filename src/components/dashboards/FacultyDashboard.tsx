@@ -17,9 +17,12 @@ export const FacultyDashboard: React.FC = () => {
   const {
     currentUser,
     courses,
+    resources,
     assignments,
     submissions,
     assessments,
+    approvalRequests,
+    classSwaps,
     setActiveTab,
     setSelectedCourseId,
     setSelectedAssignmentId,
@@ -30,6 +33,11 @@ export const FacultyDashboard: React.FC = () => {
   const [evaluatingSubId, setEvaluatingSubId] = useState<string | null>(null);
   const [evalMarks, setEvalMarks] = useState<number>(20);
   const [evalFeedback, setEvalFeedback] = useState<string>('Good comprehension of the topic.');
+
+  // Teaching materials uploaded by this faculty member
+  const myResources = resources.filter((r) => r.uploadedBy === currentUser.id && !r.isSoftDeleted);
+  const myTotalDownloads = myResources.reduce((acc, r) => acc + (r.downloadCount || 0), 0);
+  const myPendingApprovals = approvalRequests.filter((r) => r.submittedBy === currentUser.id && r.status === 'pending');
 
   // Courses assigned to this faculty member
   const facultyCourses = courses.filter(
@@ -72,21 +80,28 @@ export const FacultyDashboard: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={() => setActiveTab('resources')}
-              className="bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg shadow transition flex items-center gap-2"
+              className="bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg shadow transition flex items-center gap-2 cursor-pointer"
             >
               <Upload className="w-4 h-4" />
-              <span>{language === 'bn' ? 'নোটস আপলোড' : 'Upload Material'}</span>
+              <span>Teaching Materials ({myResources.length})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('approvals')}
+              className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg border border-white/20 transition flex items-center gap-2 cursor-pointer"
+            >
+              <Clock className="w-4 h-4" />
+              <span>Approvals & Swaps {myPendingApprovals.length > 0 ? `(${myPendingApprovals.length})` : ''}</span>
             </button>
             <button
               onClick={() => setActiveTab('assignments')}
-              className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg border border-white/20 transition flex items-center gap-2"
+              className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg border border-white/20 transition flex items-center gap-2 cursor-pointer"
             >
               <PlusCircle className="w-4 h-4" />
               <span>{language === 'bn' ? 'অ্যাসাইনমেন্ট তৈরি' : 'New Assignment'}</span>
             </button>
             <button
               onClick={() => setActiveTab('attendance')}
-              className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg border border-white/20 transition flex items-center gap-2"
+              className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg border border-white/20 transition flex items-center gap-2 cursor-pointer"
             >
               <Clock className="w-4 h-4" />
               <span>{language === 'bn' ? 'উপস্থিতি নথিভুক্ত' : 'Mark Attendance'}</span>
@@ -96,7 +111,7 @@ export const FacultyDashboard: React.FC = () => {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Assigned Courses</span>
@@ -121,6 +136,17 @@ export const FacultyDashboard: React.FC = () => {
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
+            <span>Teaching Materials</span>
+            <Upload className="w-4 h-4 text-purple-600" />
+          </div>
+          <div className="text-2xl font-bold text-purple-700 mt-2">
+            {myResources.length}
+          </div>
+          <div className="text-[11px] text-purple-700 font-medium mt-1">{myTotalDownloads} Student Downloads</div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
             <span>Pending Evaluations</span>
             <FileCheck className="w-4 h-4 text-amber-600" />
           </div>
@@ -132,13 +158,13 @@ export const FacultyDashboard: React.FC = () => {
 
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <div className="flex items-center justify-between text-slate-500 text-xs font-medium">
-            <span>Evaluated Submissions</span>
+            <span>Evaluated Tasks</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
           <div className="text-2xl font-bold text-emerald-600 mt-2">
             {evaluatedSubmissions.length}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">Feedback published</div>
+          <div className="text-[11px] text-emerald-700 font-medium mt-1">Feedback published</div>
         </div>
       </div>
 
@@ -146,6 +172,60 @@ export const FacultyDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Assigned Courses */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Independent Teaching Materials Management Panel */}
+          <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900">
+                    My Teaching Materials & Course Handouts
+                  </h2>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    Independent Control
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Publish, update, and manage versions of your course handouts and lab manuals directly
+                </p>
+              </div>
+
+              <button
+                onClick={() => setActiveTab('resources')}
+                className="text-xs text-sky-700 hover:text-sky-900 font-semibold cursor-pointer"
+              >
+                Manage All Materials ({myResources.length}) →
+              </button>
+            </div>
+
+            {myResources.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-500 bg-slate-50 rounded-xl">
+                No materials uploaded yet. Click below to add lecture slides or study handouts.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {myResources.slice(0, 4).map((res) => (
+                  <div
+                    key={res.id}
+                    className="p-3 rounded-lg border border-slate-200 bg-slate-50/60 hover:bg-slate-50 transition space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs text-slate-900 truncate max-w-[200px]">
+                        {res.title}
+                      </span>
+                      <span className="text-[10px] font-mono text-sky-800 bg-sky-50 px-1.5 py-0.2 rounded border border-sky-200 uppercase font-semibold">
+                        {res.fileType}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                      <span>{res.courseCode || 'General'} · v{res.version || 1}.0</span>
+                      <span className="text-emerald-700 font-medium">{res.downloadCount} Downloads</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
