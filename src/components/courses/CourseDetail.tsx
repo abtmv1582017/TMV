@@ -16,8 +16,10 @@ import {
   Send,
   Upload,
   Calendar,
-  Layers
+  Layers,
+  Edit3
 } from 'lucide-react';
+import { EditCourseModal } from './EditCourseModal';
 
 interface CourseDetailProps {
   courseId: string;
@@ -51,6 +53,9 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack }) 
   >('overview');
 
   const course = courses.find((c) => c.id === courseId);
+
+  // Edit Course Modal state
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // Material upload state
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -227,13 +232,23 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack }) 
 
             <div className="flex items-center gap-2">
               {isInstructor && (
-                <button
-                  onClick={() => setShowUploadModal(true)}
-                  className="bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg shadow transition flex items-center gap-1.5"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Upload Resource</span>
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    className="bg-white/10 hover:bg-white/20 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg border border-white/20 transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    title="Edit Course Name, Auto Code, Credits, Faculty, and Syllabus"
+                  >
+                    <Edit3 className="w-4 h-4 text-sky-300" />
+                    <span>Edit Course Details & Code</span>
+                  </button>
+                  <button
+                    onClick={() => setShowUploadModal(true)}
+                    className="bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold px-3.5 py-2.5 rounded-lg shadow transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Resource</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -1004,6 +1019,13 @@ export const CourseDetail: React.FC<CourseDetailProps> = ({ courseId, onBack }) 
             </form>
           </div>
         </div>
+      )}
+      {/* Edit Course Modal */}
+      {showEditModal && (
+        <EditCourseModal
+          course={course}
+          onClose={() => setShowEditModal(false)}
+        />
       )}
     </div>
   );

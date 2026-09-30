@@ -9,8 +9,10 @@ import {
   Users,
   Layers,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Edit3
 } from 'lucide-react';
+import { EditCourseModal } from './EditCourseModal';
 
 interface CourseListProps {
   onSelectCourse: (courseId: string) => void;
@@ -22,6 +24,7 @@ export const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
   const [selectedDept, setSelectedDept] = useState('all');
   const [selectedSemester, setSelectedSemester] = useState('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
 
   // New course form state
   const [newCode, setNewCode] = useState('');
@@ -179,10 +182,25 @@ export const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
 
               <div className="px-5 py-3 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                 <span className="truncate font-medium text-slate-700">{c.facultyName}</span>
-                <span className="text-sky-700 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
-                  {c.units.length} Units
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </span>
+                <div className="flex items-center gap-2">
+                  {canCreate && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingCourse(c);
+                      }}
+                      className="p-1 hover:bg-slate-200/80 rounded-md text-slate-500 hover:text-sky-700 transition cursor-pointer"
+                      title="Edit Course Name, Code & Details"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <span className="text-sky-700 font-semibold flex items-center gap-1 group-hover:translate-x-0.5 transition">
+                    {c.units.length} Units
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                </div>
               </div>
             </div>
           );
@@ -310,6 +328,13 @@ export const CourseList: React.FC<CourseListProps> = ({ onSelectCourse }) => {
             </form>
           </div>
         </div>
+      )}
+      {/* Edit Course Modal */}
+      {editingCourse && (
+        <EditCourseModal
+          course={editingCourse}
+          onClose={() => setEditingCourse(null)}
+        />
       )}
     </div>
   );
