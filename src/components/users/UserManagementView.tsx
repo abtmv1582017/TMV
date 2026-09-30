@@ -164,6 +164,13 @@ Rupankar Das,r.das@student.tamralipta.ac.in,+91 98333 44556,student,dept-math,BS
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={() => setActiveTab('master_admin')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800 text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
+          >
+            <Shield className="w-4 h-4 text-purple-200" />
+            <span>Master Admin A-to-Z Panel</span>
+          </button>
+          <button
             onClick={() => setActiveTab('auth_security')}
             className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold transition"
           >

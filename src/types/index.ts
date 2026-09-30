@@ -4,9 +4,16 @@ export type UserRole =
   | 'dept_head'
   | 'faculty'
   | 'student'
-  | 'tech_support';
+  | 'tech_support'
+  | 'staff';
 
-export type AccountStatus = 'active' | 'deactivated' | 'pending_activation' | 'locked';
+export type AccountStatus = 'active' | 'deactivated' | 'pending_activation' | 'locked' | 'suspended' | 'on_leave';
+
+export interface StakeholderEditLog {
+  timestamp: string;
+  modifiedBy: string;
+  changeSummary: string;
+}
 
 export interface User {
   id: string;
@@ -36,6 +43,63 @@ export interface User {
   assignedCourseIds?: string[];
   createdAt?: string;
   lastLogin?: string;
+  
+  // A to Z Stakeholder Information
+  dob?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  bloodGroup?: string;
+  aadhaarNumber?: string;
+  category?: 'General' | 'OBC-A' | 'OBC-B' | 'SC' | 'ST' | 'EWS';
+  nationality?: string;
+  religion?: string;
+  motherTongue?: string;
+  isPwd?: boolean;
+  officeRoom?: string;
+  qualification?: string;
+  specialization?: string;
+  alternateEmail?: string;
+  alternatePhone?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  permanentAddress?: {
+    street?: string;
+    city?: string;
+    district?: string;
+    state?: string;
+    pinCode?: string;
+  };
+  presentAddress?: {
+    street?: string;
+    city?: string;
+    district?: string;
+    state?: string;
+    pinCode?: string;
+  };
+  guardian?: {
+    fatherName?: string;
+    motherName?: string;
+    guardianName?: string;
+    relationship?: string;
+    phone?: string;
+    email?: string;
+    occupation?: string;
+    annualIncome?: string;
+  };
+  financial?: {
+    feeStatus?: 'paid' | 'pending' | 'exempted' | 'scholarship';
+    scholarshipName?: string;
+    scholarshipId?: string;
+    libraryCardNo?: string;
+    booksIssued?: number;
+    hostelStatus?: 'day_scholar' | 'hostel_resident';
+    biometricId?: string;
+  };
+  forcePasswordChange?: boolean;
+  twoFactorEnabled?: boolean;
+  permissions?: string[];
+  updatedAt?: string;
+  lastModifiedBy?: string;
+  editLogs?: StakeholderEditLog[];
 }
 
 export interface PasswordResetRecord {

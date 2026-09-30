@@ -12,8 +12,10 @@ import {
   EyeOff,
   ShieldCheck,
   Clock,
-  RotateCcw
+  RotateCcw,
+  Shield
 } from 'lucide-react';
+import { AdminPasswordRetrievalModal } from './AdminPasswordRetrievalModal';
 
 interface ForgotPasswordModalProps {
   onClose: () => void;
@@ -32,6 +34,8 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
     language,
     t
   } = useApp();
+
+  const [showAdminRecovery, setShowAdminRecovery] = useState(false);
 
   // Recovery method: 'email' | 'mobile_otp'
   const [method, setMethod] = useState<'email' | 'mobile_otp'>('email');
@@ -170,6 +174,21 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
             className="text-slate-400 hover:text-slate-700 p-1 rounded-lg text-xs"
           >
             ✕
+          </button>
+        </div>
+
+        {/* Master Admin Recovery Link Banner */}
+        <div className="mb-4 p-2.5 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between text-xs text-purple-900">
+          <div className="flex items-center gap-1.5 font-semibold">
+            <Shield className="w-3.5 h-3.5 text-purple-700" />
+            <span>Master Administrator Account?</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowAdminRecovery(true)}
+            className="text-purple-700 hover:text-purple-900 font-bold underline cursor-pointer text-[11px]"
+          >
+            Retrieve via Mail or Phone →
           </button>
         </div>
 
@@ -422,6 +441,16 @@ export const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({
               </button>
             </div>
           </div>
+        )}
+
+        {showAdminRecovery && (
+          <AdminPasswordRetrievalModal
+            onClose={() => setShowAdminRecovery(false)}
+            onSuccess={() => {
+              setShowAdminRecovery(false);
+              onSuccessReturnToLogin();
+            }}
+          />
         )}
       </div>
     </div>

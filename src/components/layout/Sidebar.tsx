@@ -15,6 +15,7 @@ import {
   BarChart3,
   Layers,
   Clock,
+  Shield,
   ShieldAlert,
   ShieldCheck,
   KeyRound,
@@ -172,6 +173,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       icon: Library
     },
     // Admin / Management specific links
+    {
+      id: 'master_admin',
+      label: 'Master Admin Panel',
+      icon: Shield,
+      roles: ['super_admin', 'principal']
+    },
     {
       id: 'structure',
       label: t('nav_academic_structure'),

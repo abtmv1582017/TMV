@@ -18,13 +18,18 @@ import {
   Globe,
   KeyRound,
   ShieldAlert,
-  FileText
+  FileText,
+  Sparkles,
+  Smartphone,
+  Mail,
+  ShieldCheck
 } from 'lucide-react';
 import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { ForgotUserIdModal } from './ForgotUserIdModal';
 import { AccountActivationModal } from './AccountActivationModal';
 import { NotificationSimDrawer } from './NotificationSimDrawer';
 import { UserManualModal } from '../support/UserManualModal';
+import { AdminPasswordRetrievalModal } from './AdminPasswordRetrievalModal';
 
 export const LoginPage: React.FC = () => {
   const {
@@ -46,6 +51,7 @@ export const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
+  const [showAdminRecoveryModal, setShowAdminRecoveryModal] = useState(false);
 
   // Load remember-me preference
   useEffect(() => {
@@ -62,6 +68,7 @@ export const LoginPage: React.FC = () => {
     icon: React.ElementType;
     desc: string;
     defaultId: string;
+    isMasterAdmin?: boolean;
   }[] = [
     {
       role: 'student',
@@ -97,11 +104,12 @@ export const LoginPage: React.FC = () => {
     },
     {
       role: 'super_admin',
-      title: 'Super Administrator',
-      bengaliTitle: 'সুপার অ্যাডমিন',
+      title: 'Master Administrator',
+      bengaliTitle: 'মাস্টার অ্যাডমিন',
       icon: Shield,
-      desc: 'Full system configuration, sessions, audit & RBAC directory',
-      defaultId: 'TM-SADM-0001'
+      desc: 'Full A-to-Z stakeholder records modification, database & security console',
+      defaultId: 'TM-SADM-0001',
+      isMasterAdmin: true
     },
     {
       role: 'tech_support',
@@ -121,6 +129,14 @@ export const LoginPage: React.FC = () => {
       setPassword('Tamralipta@2026');
       setErrorMessage('');
     }
+  };
+
+  const handleQuickSwitchMasterAdmin = () => {
+    setSelectedRole('super_admin');
+    setCredential('TM-SADM-0001');
+    setPassword('Tamralipta@2026');
+    setErrorMessage('');
+    setInfoMessage('Switched to Master Admin Mode. Full A-to-Z stakeholder modification privileges enabled.');
   };
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -173,16 +189,30 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
-          {/* User Manual & Language Toggle */}
+          {/* Master Admin Direct Trigger & Language Toggle */}
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={handleQuickSwitchMasterAdmin}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer shadow-xs border ${
+                selectedRole === 'super_admin'
+                  ? 'bg-purple-600 text-white border-purple-400'
+                  : 'bg-purple-950/70 hover:bg-purple-900 text-purple-200 border-purple-500/40'
+              }`}
+              title="Switch to Master Admin Console Gateway"
+            >
+              <Shield className="w-3.5 h-3.5 text-purple-300" />
+              <span>Master Admin Portal</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveAuthModal('user_manual')}
-              className="flex items-center gap-1.5 px-3 py-1 bg-sky-900/70 hover:bg-sky-800 text-sky-200 border border-sky-400/30 rounded-lg text-xs font-medium transition cursor-pointer shadow-xs"
-              title="Download or Read the Comprehensive 10-Page Stakeholder User Manual"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-sky-900/70 hover:bg-sky-800 text-sky-200 border border-sky-400/30 rounded-lg text-xs font-medium transition cursor-pointer shadow-xs"
+              title="Download or Read the Comprehensive Stakeholder User Manual"
             >
               <FileText className="w-3.5 h-3.5 text-sky-300" />
-              <span>{language === 'bn' ? 'ব্যবহার নির্দেশিকা (PDF)' : 'User Manual (PDF)'}</span>
+              <span>{language === 'bn' ? 'ব্যবহার নির্দেশিকা' : 'User Manual'}</span>
             </button>
 
             {/* Language Toggle */}
@@ -243,20 +273,31 @@ export const LoginPage: React.FC = () => {
                       onClick={() => handleSelectRole(item.role)}
                       className={`w-full p-2.5 rounded-xl border text-left flex items-center gap-3 transition-all ${
                         isSelected
-                          ? 'bg-sky-500/20 border-sky-400 text-white shadow-xs'
+                          ? item.isMasterAdmin
+                            ? 'bg-purple-600/30 border-purple-400 text-white shadow-xs ring-1 ring-purple-400'
+                            : 'bg-sky-500/20 border-sky-400 text-white shadow-xs'
                           : 'bg-white/5 border-white/10 text-slate-300 hover:bg-white/10'
                       }`}
                     >
                       <div
                         className={`p-2 rounded-lg ${
-                          isSelected ? 'bg-sky-500 text-white' : 'bg-slate-800 text-slate-300'
+                          isSelected
+                            ? item.isMasterAdmin ? 'bg-purple-600 text-white' : 'bg-sky-500 text-white'
+                            : 'bg-slate-800 text-slate-300'
                         }`}
                       >
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold text-xs leading-tight text-white flex items-center justify-between">
-                          <span>{language === 'bn' ? item.bengaliTitle : item.title}</span>
+                          <span className="flex items-center gap-1.5">
+                            <span>{language === 'bn' ? item.bengaliTitle : item.title}</span>
+                            {item.isMasterAdmin && (
+                              <span className="text-[9px] bg-purple-500 text-white px-1.5 py-0.2 rounded font-extrabold uppercase">
+                                Master
+                              </span>
+                            )}
+                          </span>
                           <span className="font-mono text-[10px] text-sky-300 font-normal">
                             {item.defaultId}
                           </span>
@@ -270,21 +311,19 @@ export const LoginPage: React.FC = () => {
                 })}
               </div>
 
-              {/* Stakeholder Manual Direct Link */}
+              {/* Admin Password Retrieval Direct Link in Left Sidebar */}
               <div className="mt-4 pt-3 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setActiveAuthModal('user_manual')}
-                  className="w-full flex items-center justify-between p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-sky-200 transition cursor-pointer"
+                  onClick={() => setShowAdminRecoveryModal(true)}
+                  className="w-full flex items-center justify-between p-2.5 rounded-xl bg-purple-900/40 hover:bg-purple-900/60 border border-purple-400/40 text-xs text-purple-200 transition cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-sky-400" />
-                    <span className="font-medium">
-                      {language === 'bn' ? 'সকল অংশীদারের নির্দেশিকা (PDF)' : 'Stakeholder User Manual (PDF)'}
-                    </span>
+                    <KeyRound className="w-4 h-4 text-purple-300" />
+                    <span className="font-bold">Admin Password Retrieval</span>
                   </div>
-                  <span className="text-[10px] bg-sky-500/30 text-sky-200 px-1.5 py-0.5 rounded font-bold">
-                    v2.4
+                  <span className="text-[10px] bg-purple-500/40 text-purple-200 px-2 py-0.5 rounded font-mono font-bold">
+                    Mail / Phone OTP
                   </span>
                 </button>
               </div>
@@ -302,16 +341,43 @@ export const LoginPage: React.FC = () => {
           {/* Right Column: Secure Login Form */}
           <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between">
             <div>
-              <div className="border-b border-slate-100 pb-4 mb-6">
-                <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                  {language === 'bn' ? t('auth_login_title') : 'Secure Login'}
-                </h1>
-                <p className="text-xs text-slate-500 mt-1">
-                  {language === 'bn'
-                    ? t('auth_login_subtitle')
-                    : 'Sign in to access your academic dashboard.'}
-                </p>
+              {/* Header with Master Admin Indicator */}
+              <div className="border-b border-slate-100 pb-4 mb-6 flex items-start justify-between">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <span>{language === 'bn' ? t('auth_login_title') : 'Secure Login'}</span>
+                    {selectedRole === 'super_admin' && (
+                      <span className="text-xs bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full border border-purple-200 flex items-center gap-1">
+                        <Shield className="w-3 h-3 text-purple-700" />
+                        <span>Master Admin Gate</span>
+                      </span>
+                    )}
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {selectedRole === 'super_admin'
+                      ? 'Authenticated access to the Master Admin Panel with full A-to-Z stakeholder editing authority.'
+                      : (language === 'bn' ? t('auth_login_subtitle') : 'Sign in to access your academic dashboard.')}
+                  </p>
+                </div>
               </div>
+
+              {selectedRole === 'super_admin' && (
+                <div className="mb-5 p-3 bg-purple-50/80 border border-purple-200 text-purple-900 rounded-xl text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-purple-700 flex-shrink-0" />
+                    <span>
+                      Master Admin profile loaded: <span className="font-bold">Dr. Sisir Kumar Bhowmik</span> (<span className="font-mono font-bold">TM-SADM-0001</span>)
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminRecoveryModal(true)}
+                    className="text-purple-700 hover:text-purple-900 font-bold underline whitespace-nowrap ml-2 cursor-pointer"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              )}
 
               {errorMessage && (
                 <div className="mb-5 p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-start gap-2.5 animate-in fade-in">
@@ -340,25 +406,37 @@ export const LoginPage: React.FC = () => {
                       required
                       value={credential}
                       onChange={(e) => setCredential(e.target.value)}
-                      placeholder="e.g. TM-STD-2026-00042 or registered email"
+                      placeholder="e.g. TM-STD-2026-00042, TM-SADM-0001, or email"
                       className="w-full text-xs pl-10 pr-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition font-medium"
                     />
                   </div>
                 </div>
 
-                {/* Password input with show/hide */}
+                {/* Password input with show/hide and Admin Recovery option */}
                 <div>
                   <div className="flex items-center justify-between text-xs mb-1">
                     <label className="font-semibold text-slate-700">
                       {language === 'bn' ? 'পাসওয়ার্ড:' : 'Password:'}
                     </label>
-                    <button
-                      type="button"
-                      onClick={() => setActiveAuthModal('forgot_password')}
-                      className="text-sky-700 hover:text-sky-900 font-semibold"
-                    >
-                      {language === 'bn' ? t('auth_forgot_password') : 'Forgot Password?'}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminRecoveryModal(true)}
+                        className="text-purple-700 hover:text-purple-900 font-bold text-[11px] flex items-center gap-1 cursor-pointer"
+                        title="Retrieve administrator password via Mail ID or Phone Number"
+                      >
+                        <KeyRound className="w-3 h-3 text-purple-600" />
+                        <span>Admin Retrieval (Mail/Phone)</span>
+                      </button>
+                      <span className="text-slate-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setActiveAuthModal('forgot_password')}
+                        className="text-sky-700 hover:text-sky-900 font-semibold text-[11px] cursor-pointer"
+                      >
+                        {language === 'bn' ? t('auth_forgot_password') : 'Forgot?'}
+                      </button>
+                    </div>
                   </div>
                   <div className="relative">
                     <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
@@ -373,7 +451,7 @@ export const LoginPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-700"
+                      className="absolute right-3.5 top-2.5 text-slate-400 hover:text-slate-700 cursor-pointer"
                       aria-label="Toggle password visibility"
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -396,7 +474,7 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveAuthModal('forgot_user_id')}
-                    className="text-slate-500 hover:text-slate-800 text-[11px] font-medium"
+                    className="text-slate-500 hover:text-slate-800 text-[11px] font-medium cursor-pointer"
                   >
                     {t('auth_forgot_user_id')}
                   </button>
@@ -407,9 +485,19 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full py-3 bg-[#0f2942] hover:bg-[#1a3d5e] disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2"
+                    className={`w-full py-3 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-2 cursor-pointer ${
+                      selectedRole === 'super_admin'
+                        ? 'bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-800 hover:to-indigo-800'
+                        : 'bg-[#0f2942] hover:bg-[#1a3d5e]'
+                    } disabled:opacity-50`}
                   >
-                    <span>{isLoading ? 'Verifying Credentials...' : t('auth_sign_in_btn')}</span>
+                    <span>
+                      {isLoading
+                        ? 'Verifying Secure Credentials...'
+                        : selectedRole === 'super_admin'
+                        ? 'Sign In to Master Admin Panel'
+                        : t('auth_sign_in_btn')}
+                    </span>
                     <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -421,7 +509,7 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveAuthModal('account_activation')}
-                  className="font-bold text-sky-700 hover:text-sky-900"
+                  className="font-bold text-sky-700 hover:text-sky-900 cursor-pointer"
                 >
                   Activate Account →
                 </button>
@@ -430,6 +518,15 @@ export const LoginPage: React.FC = () => {
 
             {/* Footer links */}
             <div className="mt-8 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between text-[11px] text-slate-400 gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAdminRecoveryModal(true)}
+                className="text-purple-700 font-bold hover:underline cursor-pointer flex items-center gap-1"
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Admin Password Retrieval</span>
+              </button>
+              <span aria-hidden="true">·</span>
               <button
                 type="button"
                 onClick={() => setActiveAuthModal('user_manual')}
@@ -446,22 +543,6 @@ export const LoginPage: React.FC = () => {
               >
                 Contact Support
               </button>
-              <span aria-hidden="true">·</span>
-              <button
-                type="button"
-                onClick={() => alert('Tamralipta Mahavidyalaya LMS complies with the Digital Personal Data Protection (DPDP) Act, 2023. Password hashes are salted and user identity data is strictly safeguarded.')}
-                className="hover:text-slate-700 cursor-pointer"
-              >
-                Privacy Policy (DPDP)
-              </button>
-              <span aria-hidden="true">·</span>
-              <button
-                type="button"
-                onClick={() => alert('Academic Code of Conduct: Access is restricted to registered students and faculty of Tamralipta Mahavidyalaya.')}
-                className="hover:text-slate-700 cursor-pointer"
-              >
-                Terms of Use
-              </button>
             </div>
           </div>
         </div>
@@ -470,7 +551,23 @@ export const LoginPage: React.FC = () => {
       {/* Floating Simulation Notifications Drawer (for previewing simulated SMS & Email dispatches) */}
       <NotificationSimDrawer />
 
-      {/* Modals */}
+      {/* Admin Password Retrieval Modal */}
+      {showAdminRecoveryModal && (
+        <AdminPasswordRetrievalModal
+          onClose={() => setShowAdminRecoveryModal(false)}
+          onSuccess={(adminUserId, newPass) => {
+            setShowAdminRecoveryModal(false);
+            setCredential(adminUserId);
+            if (newPass) {
+              setPassword(newPass);
+            }
+            setSelectedRole('super_admin');
+            setInfoMessage(`Master Admin password reset successfully via registered mail/phone! You can now log in.`);
+          }}
+        />
+      )}
+
+      {/* Standard Modals */}
       {activeAuthModal === 'user_manual' && (
         <UserManualModal
           onClose={() => setActiveAuthModal(null)}
@@ -518,3 +615,4 @@ export const LoginPage: React.FC = () => {
     </div>
   );
 };
+

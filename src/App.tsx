@@ -24,6 +24,7 @@ import { InstitutionalDocumentsView } from './components/documents/Institutional
 import { CentralDatabaseView } from './components/database/CentralDatabaseView';
 
 // Modules
+import { MasterAdminStakeholderPanel } from './components/admin/MasterAdminStakeholderPanel';
 import { CourseList } from './components/courses/CourseList';
 import { CourseDetail } from './components/courses/CourseDetail';
 import { ResourceLibrary } from './components/resources/ResourceLibrary';
@@ -87,6 +88,9 @@ const AppContent: React.FC = () => {
 
       case 'database':
         return <CentralDatabaseView />;
+
+      case 'master_admin':
+        return <MasterAdminStakeholderPanel />;
 
       case 'auth_security':
         return <AdminAuthManagementView />;

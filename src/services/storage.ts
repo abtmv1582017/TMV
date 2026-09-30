@@ -112,7 +112,32 @@ export const StorageService = {
   getProgrammes: (): Programme[] => loadItem(STORAGE_KEYS.PROGRAMMES, initialProgrammes),
   saveProgrammes: (progs: Programme[]) => saveItem(STORAGE_KEYS.PROGRAMMES, progs),
 
-  getUsers: (): User[] => loadItem(STORAGE_KEYS.USERS, initialUsers),
+  getUsers: (): User[] => {
+    const stored = loadItem<User[]>(STORAGE_KEYS.USERS, initialUsers);
+    if (Array.isArray(stored) && stored.length > 0) {
+      // Ensure any newly added users in initialUsers (like staff) are included, and default fields merged
+      const existingIds = new Set(stored.map((u) => u.id));
+      const missingFromInit = initialUsers.filter((u) => !existingIds.has(u.id));
+      const mergedStored = stored.map((u) => {
+        const init = initialUsers.find((i) => i.id === u.id);
+        if (init) {
+          return {
+            ...init,
+            ...u,
+            permanentAddress: u.permanentAddress || init.permanentAddress,
+            presentAddress: u.presentAddress || init.presentAddress,
+            guardian: u.guardian || init.guardian,
+            financial: u.financial || init.financial,
+            permissions: u.permissions || init.permissions,
+            editLogs: u.editLogs || init.editLogs
+          };
+        }
+        return u;
+      });
+      return [...mergedStored, ...missingFromInit];
+    }
+    return initialUsers;
+  },
   saveUsers: (users: User[]) => saveItem(STORAGE_KEYS.USERS, users),
 
   getCourses: (): Course[] => loadItem(STORAGE_KEYS.COURSES, initialCourses),

@@ -108,8 +108,16 @@ export const SuperAdminDashboard: React.FC = () => {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
+              onClick={() => setActiveTab('master_admin')}
+              className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer border border-purple-400/40"
+              title="Open the Master Admin Panel to view and edit all A-to-Z stakeholder information"
+            >
+              <Shield className="w-4 h-4 text-purple-200" />
+              <span>Master Admin A-to-Z Panel</span>
+            </button>
+            <button
               onClick={handleDownloadBackup}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3.5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer"
               title="Download complete JSON dump of the centralized LMS database"
             >
               <Download className="w-4 h-4" />
